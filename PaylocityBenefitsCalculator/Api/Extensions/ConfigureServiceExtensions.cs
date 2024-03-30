@@ -13,6 +13,7 @@ namespace Api.Extensions
             // Services
             services.AddTransient<IEmployeeService, EmployeeService>();
             services.AddTransient<IDependentService, DependentService>();
+            services.AddTransient<IPaycheckService, PaycheckService>();
 
             // Repos
             services.AddTransient<IEmployeeRepository, EmployeeRepository>();
