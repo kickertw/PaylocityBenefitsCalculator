@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Api.Dtos.Dependent;
 using Api.Dtos.Employee;
+using Api.Dtos.Paycheck;
 using Api.Models;
 using Xunit;
 
@@ -84,7 +85,6 @@ public class EmployeeIntegrationTests : IntegrationTest
     }
 
     [Fact]
-    //task: make test pass
     public async Task WhenAskedForAnEmployee_ShouldReturnCorrectEmployee()
     {
         var response = await HttpClient.GetAsync("/api/v1/employees/1");
@@ -100,11 +100,35 @@ public class EmployeeIntegrationTests : IntegrationTest
     }
     
     [Fact]
-    //task: make test pass
     public async Task WhenAskedForANonexistentEmployee_ShouldReturn404()
     {
         var response = await HttpClient.GetAsync($"/api/v1/employees/{int.MinValue}");
         await response.ShouldReturn(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task WhenAskedForANonexistentEmployeePaycheck_ShouldReturn404()
+    {
+        var response = await HttpClient.GetAsync($"/api/v1/employees/{int.MinValue}/paycheck");
+        await response.ShouldReturn(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task WhenAskedForAnEmployeePaycheck_ShouldReturnCorrectPaycheck()
+    {
+        var response = await HttpClient.GetAsync($"/api/v1/employees/1/paycheck");
+        var paycheck = new EmployeePaycheckDto
+        {
+            EmployeeId = 1,
+            BaseSalary = Math.Round(75420.99m / 26, 2),
+            BaseBenefitCost = Math.Round(1000m * 12 / 26, 2),
+            DependentBenefitCost = 0,
+            SalaryBenefitCost = 0,
+            NetPay = 0
+        };
+        paycheck.NetPay = paycheck.BaseSalary - paycheck.BaseBenefitCost - paycheck.DependentBenefitCost - paycheck.SalaryBenefitCost;
+
+        await response.ShouldReturn(HttpStatusCode.OK, paycheck);
     }
 }
 

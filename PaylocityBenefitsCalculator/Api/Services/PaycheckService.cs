@@ -1,9 +1,6 @@
 ﻿using Api.Dtos.Employee;
 using Api.Dtos.Paycheck;
-using Api.Models;
 using Api.Services.Interfaces;
-using Microsoft.Extensions.Hosting;
-using System.Runtime.ConstrainedExecution;
 
 namespace Api.Services
 {
@@ -60,8 +57,7 @@ namespace Api.Services
 
                 // Calculate total paycheck amount by taking
                 // the base salary to be paid and subtracting all other costs
-                var netPay = employeePaycheckDto.BaseSalary - employeePaycheckDto.BaseBenefitCost - employeePaycheckDto.SalaryBenefitCost - employeePaycheckDto.DependentBenefitCost;
-                employeePaycheckDto.NetPay = Math.Round(netPay, 2);
+                employeePaycheckDto.NetPay = employeePaycheckDto.BaseSalary - employeePaycheckDto.BaseBenefitCost - employeePaycheckDto.SalaryBenefitCost - employeePaycheckDto.DependentBenefitCost;
 
                 return employeePaycheckDto;
             }
