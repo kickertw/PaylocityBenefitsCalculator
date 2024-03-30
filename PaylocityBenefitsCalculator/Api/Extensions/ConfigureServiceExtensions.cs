@@ -12,9 +12,11 @@ namespace Api.Extensions
         {
             // Services
             services.AddTransient<IEmployeeService, EmployeeService>();
+            services.AddTransient<IDependentService, DependentService>();
 
             // Repos
             services.AddTransient<IEmployeeRepository, EmployeeRepository>();
+            services.AddTransient<IDependentRepository, DependentRepository>();
         }
 
         public static void ConfigureDb(this IServiceCollection services)

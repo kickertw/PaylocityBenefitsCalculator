@@ -25,6 +25,9 @@ public class EmployeesController : ControllerBase
     /// <returns>GetEmployeeDto</returns>
     [SwaggerOperation(Summary = "Get employee by id")]
     [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<GetEmployeeDto>>> Get(int id)
     {
         try
@@ -65,6 +68,8 @@ public class EmployeesController : ControllerBase
     /// <returns>List of GetEmployeDto's</returns>
     [SwaggerOperation(Summary = "Get all employees")]
     [HttpGet("")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<List<GetEmployeeDto>>>> GetAll()
     {
         try
