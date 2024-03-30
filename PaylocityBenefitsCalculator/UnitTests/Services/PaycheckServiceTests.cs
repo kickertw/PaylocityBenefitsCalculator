@@ -51,15 +51,36 @@ namespace UnitTests.Services
 
             // Assert
             Assert.NotNull(paycheck);
-            Assert.Equal(expectedAbove80kCost, paycheck.Above80kBenefitCost);
+            Assert.Equal(expectedAbove80kCost, paycheck.SalaryBenefitCost);
             Assert.Equal(expectedSalary, paycheck.BaseSalary);
+        }
+
+        [Fact]
+        public void CalculatePaycheck_ReturnsCorrectBaseCost()
+        {
+            // Arrange
+            var expectedCost = Math.Round(1000m * 12 / 26, 2);
+            var sut = new PaycheckService();
+            var employee = new GetEmployeeDto()
+            {
+                Salary = 1
+            };
+
+            // Act
+            var paycheck = sut.CalculatePaycheck(employee);
+
+
+            // Assert
+            Assert.NotNull(paycheck);
+            Assert.Equal(expectedCost, paycheck.BaseBenefitCost);
         }
 
         [Theory]
         [MemberData(nameof(DependentsInputData))]
-        public void CalculatePaycheck_50AndUnderDependents_ReturnsCorrectCost(DateTime birthdate)
+        public void CalculatePaycheck_With50AndUnderDependents_ReturnsCorrectCost(DateTime birthdate)
         {
             // Arrange
+            var expectedCost = Math.Round(600m * 12 / 26, 2);
             var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
@@ -78,14 +99,15 @@ namespace UnitTests.Services
 
             // Assert
             Assert.NotNull(paycheck);
-            Assert.Equal(600m, paycheck.DependentBenefitCost);
+            Assert.Equal(expectedCost, paycheck.DependentBenefitCost);
         }
 
         [Theory]
         [MemberData(nameof(DependentsOver50InputData))]
-        public void CalculatePaycheck_Over50Dependents_ReturnsCorrectCost(DateTime birthdate)
+        public void CalculatePaycheck_WithOver50Dependents_ReturnsCorrectCost(DateTime birthdate)
         {
             // Arrange
+            var expectedCost = Math.Round(800m * 12 / 26, 2);
             var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
@@ -104,7 +126,7 @@ namespace UnitTests.Services
 
             // Assert
             Assert.NotNull(paycheck);
-            Assert.Equal(800m, paycheck.DependentBenefitCost);
+            Assert.Equal(expectedCost, paycheck.DependentBenefitCost);
         }
 
         [Fact]
@@ -126,10 +148,19 @@ namespace UnitTests.Services
             Assert.Equal(0, paycheck.DependentBenefitCost);
         }
 
+        /// <summary>
+        /// For Salary of $80k, 2 depedents (1 under and 1 over 50)
+        /// paycheck salary = 80,000 / 26            = 3076.92
+        /// base cost       = -1,000 * 12 / 26       = 461.54
+        /// dependent cost  = -(600 + 800) * 12 / 26 = 646.15
+        /// salary cost     = 0
+        /// Net                                      = 1,969.23
+        /// </summary>
         [Fact]
         public void CalculatePaycheck_NetPay_ReturnsCorrectCost()
         {
             // Arrange
+            var expectedNetPay = 1969.23m;
             var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
@@ -152,7 +183,7 @@ namespace UnitTests.Services
 
             // Assert
             Assert.NotNull(paycheck);
-            Assert.Equal(676.92m, paycheck.NetPay);
+            Assert.Equal(expectedNetPay, paycheck.NetPay);
         }
     }
 }

@@ -1,9 +1,22 @@
 ﻿using Api.Dtos.Employee;
 using Api.Dtos.Paycheck;
+using Api.Models;
 using Api.Services.Interfaces;
+using Microsoft.Extensions.Hosting;
+using System.Runtime.ConstrainedExecution;
 
 namespace Api.Services
 {
+    /// <summary>
+    /// Service to calculate an employee's paycheck
+    /// Current requirements are:
+    ///     - Able to calculate and view a paycheck for an employee given the following rules:
+	///     - 26 paychecks per year with deductions spread as evenly as possible on each paycheck.
+	///     - Employees have a base cost of $1,000 per month (for benefits)
+	///     - Each dependent represents an additional $600 cost per month(for benefits)
+	///     - Employees that make more than $80,000 per year will incur an additional 2% of their yearly salary in benefits costs.
+	///     - Dependents that are over 50 years old will incur an additional $200 per month
+    /// </summary>
     public class PaycheckService : IPaycheckService
     {
         private const int TotalPaychecksPerYear = 26;
@@ -18,11 +31,9 @@ namespace Api.Services
         /// Calculates the net pay
         /// </summary>
         /// <param name="employee"></param>
-        /// <returns></returns>
+        /// <returns>EmployePaycheckDto</returns>
         public EmployeePaycheckDto? CalculatePaycheck(GetEmployeeDto employee)
         {
-            var today = DateTime.Now.Date;
-
             try
             {
                 // 26 paychecks per year with deductions spread as evenly as possible on each paycheck.
@@ -30,8 +41,8 @@ namespace Api.Services
                 {
                     EmployeeId = employee.Id,
                     BaseSalary = Math.Round(employee.Salary / TotalPaychecksPerYear, 2),
-                    Above80kBenefitCost = 0,
-                    BaseBenefitCost = BaseBenefitCostPerMonth,
+                    SalaryBenefitCost = 0,
+                    BaseBenefitCost = Math.Round(BaseBenefitCostPerMonth * 12 / TotalPaychecksPerYear, 2),
                     DependentBenefitCost = 0,
                     NetPay = 0
                 };
@@ -39,28 +50,18 @@ namespace Api.Services
                 // Employees that make more than $80,000 per year will incur an additional 2% of their yearly salary in benefits costs.
                 if (employee.Salary > 80000)
                 {
-                    employeePaycheckDto.Above80kBenefitCost = Math.Round(employee.Salary * AnnualSalaryOver80kBenefitCostRate / TotalPaychecksPerYear, 2);
+                    employeePaycheckDto.SalaryBenefitCost = Math.Round(employee.Salary * AnnualSalaryOver80kBenefitCostRate / TotalPaychecksPerYear, 2);
                 }
 
-                // Each dependent represents an additional $600 cost per month (for benefits)
-                // Dependents that are over 50 years old will incur an additional $200 per month
                 if (employee.Dependents.Any())
                 {
-                    var dependentCount = employee.Dependents.Count;
-                    var dependentCountOver50 = employee.Dependents.Count(i => i.DateOfBirth <= today.AddYears(-51));
-
-                    employeePaycheckDto.DependentBenefitCost =
-                        (dependentCount * DependentBaseBenefitCostPerMonth) +
-                        (dependentCountOver50 * DependentAge50PlusBenefitAddlCostPerMonth);
+                    employeePaycheckDto.DependentBenefitCost = CalculateDependentCosts(employee);
                 }
 
-                // Calculate total paycheck amount
-                employeePaycheckDto.NetPay =
-                    employeePaycheckDto.BaseSalary -
-                    employeePaycheckDto.Above80kBenefitCost -
-                    employeePaycheckDto.DependentBenefitCost -
-                    employeePaycheckDto.BaseBenefitCost;
-                employeePaycheckDto.NetPay = Math.Round(employeePaycheckDto.NetPay, 2);
+                // Calculate total paycheck amount by taking
+                // the base salary to be paid and subtracting all other costs
+                var netPay = employeePaycheckDto.BaseSalary - employeePaycheckDto.BaseBenefitCost - employeePaycheckDto.SalaryBenefitCost - employeePaycheckDto.DependentBenefitCost;
+                employeePaycheckDto.NetPay = Math.Round(netPay, 2);
 
                 return employeePaycheckDto;
             }
@@ -68,6 +69,30 @@ namespace Api.Services
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Calculate the dependent benefits cost
+        ///     - Each dependent represents an additional $600 cost per month (for benefits)
+        ///     - Dependents that are over 50 years old will incur an additional $200 per month
+        /// </summary>
+        /// <param name="employee"></param>
+        /// <returns>Total cost of dependents</returns>
+        private static decimal CalculateDependentCosts(GetEmployeeDto employee)
+        {
+            var today = DateTime.Now.Date;
+
+            var dependentCount = employee.Dependents.Count;
+            var dependentCountOver50 = employee.Dependents.Count(i => i.DateOfBirth <= today.AddYears(-51));
+
+            var dependentBaseCost = DependentBaseBenefitCostPerMonth * 12 / TotalPaychecksPerYear;
+            var dependentOver50BaseCost = DependentAge50PlusBenefitAddlCostPerMonth * 12 / TotalPaychecksPerYear;
+
+            var totalDependentCost =
+                (dependentCount * dependentBaseCost) +
+                (dependentCountOver50 * dependentOver50BaseCost);
+
+            return Math.Round(totalDependentCost, 2);
         }
     }
 }
