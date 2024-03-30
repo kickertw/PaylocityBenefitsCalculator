@@ -18,6 +18,10 @@ public class PaylocityDbContext : DbContext
         options.UseSqlite(Configuration.GetConnectionString("WebApiDatabase"));
     }
 
+    /// <summary>
+    /// Used to seed the sqlite db
+    /// </summary>
+    /// <param name="modelBuilder"></param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Employee>().HasData(
