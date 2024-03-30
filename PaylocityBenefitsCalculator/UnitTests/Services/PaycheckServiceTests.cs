@@ -8,13 +8,13 @@ namespace UnitTests.Services
     {
         // Inputs are:
         //      - annual salary
+        //      - paycheck salary (before any costs)
         //      - paycheck cost when salary > 80k
-        //      - paycheck salary
         public static TheoryData<decimal, decimal, decimal> SalaryInputData => new()
         {
-            { 26000m, 0m, 1000m },
-            { 80000m, 0m, 3076.92m },
-            { 260000m, 200m , 9800m }
+            { 26000m, 1000m, 0m },
+            { 80000m, 3076.92m, 0m },
+            { 260000m, 10000m, 200m }
         };
 
         public static TheoryData<DateTime> DependentsInputData => new()
@@ -35,8 +35,8 @@ namespace UnitTests.Services
         [MemberData(nameof(SalaryInputData))]
         public void CalculatePaycheck_Salary_ReturnsCorrectCost(
             decimal annualSalary,
-            decimal expectedAbove80kCost,
-            decimal expectedSalary)
+            decimal expectedSalary,
+            decimal expectedAbove80kCost)
         {
             // Arrange
             var sut = new PaycheckService();
