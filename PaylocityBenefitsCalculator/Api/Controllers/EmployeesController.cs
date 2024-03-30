@@ -1,5 +1,6 @@
 ﻿using Api.Dtos.Dependent;
 using Api.Dtos.Employee;
+using Api.Dtos.Paycheck;
 using Api.Models;
 using Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,14 @@ namespace Api.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
+    private readonly IPaycheckService _paycheckService;
 
-    public EmployeesController(IEmployeeService employeeService)
+    public EmployeesController(
+        IEmployeeService employeeService,
+        IPaycheckService paycheckService)
     {
         _employeeService = employeeService;
+        _paycheckService = paycheckService;
     }
 
     /// <summary>
@@ -86,6 +91,46 @@ public class EmployeesController : ControllerBase
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new ApiResponse<List<GetEmployeeDto>>
+                {
+                    Success = false,
+                    Message = "An Unexpected error has occured",
+                    Error = "An Unexpected error has occured"
+                });
+        }
+    }
+
+    [SwaggerOperation(Summary = "Get paycheck information for an employee")]
+    [HttpGet("{id}/paycheck")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<EmployeePaycheckDto>>> CalculatePaycheck(int id)
+    {
+        try
+        {
+            var employee = await _employeeService.GetEmployeeAsync(id);
+            if (employee is null)
+            {
+                return NotFound(new ApiResponse<GetEmployeeDto>
+                {
+                    Success = false,
+                    Message = "Employee not found",
+                    Error = "Employee not found"
+                });
+            }
+
+            var paycheck = _paycheckService.CalculatePaycheck(employee);
+            return Ok(new ApiResponse<EmployeePaycheckDto>
+            {
+                Data = paycheck,
+                Success = true
+            });
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new ApiResponse<List<EmployeePaycheckDto>>
                 {
                     Success = false,
                     Message = "An Unexpected error has occured",

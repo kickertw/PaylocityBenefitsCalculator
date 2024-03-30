@@ -33,14 +33,13 @@ namespace Api.Services
                     Above80kBenefitCost = 0,
                     BaseBenefitCost = BaseBenefitCostPerMonth,
                     DependentBenefitCost = 0,
-                    TotalPaycheckAmount = 0
+                    NetPay = 0
                 };
 
                 // Employees that make more than $80,000 per year will incur an additional 2% of their yearly salary in benefits costs.
                 if (employee.Salary > 80000)
                 {
                     employeePaycheckDto.Above80kBenefitCost = Math.Round(employee.Salary * AnnualSalaryOver80kBenefitCostRate / TotalPaychecksPerYear, 2);
-                    employeePaycheckDto.BaseSalary -= employeePaycheckDto.Above80kBenefitCost;
                 }
 
                 // Each dependent represents an additional $600 cost per month (for benefits)
@@ -48,7 +47,7 @@ namespace Api.Services
                 if (employee.Dependents.Any())
                 {
                     var dependentCount = employee.Dependents.Count;
-                    var dependentCountOver50 = employee.Dependents.Count(i => i.DateOfBirth < today.AddYears(-51));
+                    var dependentCountOver50 = employee.Dependents.Count(i => i.DateOfBirth <= today.AddYears(-51));
 
                     employeePaycheckDto.DependentBenefitCost =
                         (dependentCount * DependentBaseBenefitCostPerMonth) +
@@ -56,12 +55,12 @@ namespace Api.Services
                 }
 
                 // Calculate total paycheck amount
-                employeePaycheckDto.TotalPaycheckAmount =
+                employeePaycheckDto.NetPay =
                     employeePaycheckDto.BaseSalary -
                     employeePaycheckDto.Above80kBenefitCost -
                     employeePaycheckDto.DependentBenefitCost -
                     employeePaycheckDto.BaseBenefitCost;
-                employeePaycheckDto.TotalPaycheckAmount = Math.Round(employeePaycheckDto.TotalPaycheckAmount, 2);
+                employeePaycheckDto.NetPay = Math.Round(employeePaycheckDto.NetPay, 2);
 
                 return employeePaycheckDto;
             }
