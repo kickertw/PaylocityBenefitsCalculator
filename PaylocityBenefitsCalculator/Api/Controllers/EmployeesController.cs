@@ -125,6 +125,16 @@ public class EmployeesController : ControllerBase
             }
 
             var paycheck = await _paycheckService.CalculatePaycheckAsync(employee);
+            if (paycheck is null)
+            {
+                return BadRequest(new ApiResponse<EmployeePaycheckDto>
+                {
+                    Success = false,
+                    Message = "Error while calculating paycheck",
+                    Error = "Error while calculating paycheck"
+                });
+            }
+
             return Ok(new ApiResponse<EmployeePaycheckDto>
             {
                 Data = paycheck,
