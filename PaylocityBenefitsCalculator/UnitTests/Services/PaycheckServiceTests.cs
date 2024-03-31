@@ -1,6 +1,9 @@
 ﻿using Api.Dtos.Employee;
 using Api.Dtos.Dependent;
 using Api.Services;
+using Api.Repositories.Interfaces;
+using Moq;
+using Api.Models;
 
 namespace UnitTests.Services
 {
@@ -29,25 +32,41 @@ namespace UnitTests.Services
             { DateTime.Today.AddYears(-70) }
         };
 
-        public PaycheckServiceTests() { }
+        private readonly AppConfiguration appConfigs = new()
+        {
+            Id = 1,
+            TotalPaychecksPerYear = 26,
+            BaseBenefitMonthlyCost = 1000m,
+            DependentBaseBenefitMonthlyCost = 600m,
+            DependentAdditionalBenefitCostAgeThreshold = 51,
+            DependentAdditionalBenefitMonthlyCost = 200m,
+            AnnualSalaryBenefitCostThreshold = 80000m,
+            AnnualSalaryCostRate = .02m
+        };
+        private readonly Mock<IAppConfigurationRepository> mockAppConfigRepository = new();
+        private readonly PaycheckService _sut;
+
+        public PaycheckServiceTests()
+        {
+            mockAppConfigRepository.Setup(i => i.GetAppConfigurationAsync()).ReturnsAsync(appConfigs);
+            _sut = new PaycheckService(mockAppConfigRepository.Object);
+        }
 
         [Theory]
         [MemberData(nameof(SalaryInputData))]
-        public void CalculatePaycheck_Salary_ReturnsCorrectCost(
+        public async Task CalculatePaycheck_Salary_ReturnsCorrectCost(
             decimal annualSalary,
             decimal expectedSalary,
             decimal expectedAbove80kCost)
         {
             // Arrange
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = annualSalary
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
-
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);
@@ -56,19 +75,17 @@ namespace UnitTests.Services
         }
 
         [Fact]
-        public void CalculatePaycheck_ReturnsCorrectBaseCost()
+        public async Task CalculatePaycheck_ReturnsCorrectBaseCost()
         {
             // Arrange
             var expectedCost = Math.Round(1000m * 12 / 26, 2);
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = 1
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
-
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);
@@ -77,11 +94,10 @@ namespace UnitTests.Services
 
         [Theory]
         [MemberData(nameof(DependentsInputData))]
-        public void CalculatePaycheck_With50AndUnderDependents_ReturnsCorrectCost(DateTime birthdate)
+        public async Task CalculatePaycheck_With50AndUnderDependents_ReturnsCorrectCost(DateTime birthdate)
         {
             // Arrange
             var expectedCost = Math.Round(600m * 12 / 26, 2);
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = 1,
@@ -95,7 +111,7 @@ namespace UnitTests.Services
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);
@@ -104,11 +120,10 @@ namespace UnitTests.Services
 
         [Theory]
         [MemberData(nameof(DependentsOver50InputData))]
-        public void CalculatePaycheck_WithOver50Dependents_ReturnsCorrectCost(DateTime birthdate)
+        public async Task CalculatePaycheck_WithOver50Dependents_ReturnsCorrectCost(DateTime birthdate)
         {
             // Arrange
             var expectedCost = Math.Round(800m * 12 / 26, 2);
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = 1,
@@ -122,7 +137,7 @@ namespace UnitTests.Services
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);
@@ -130,10 +145,9 @@ namespace UnitTests.Services
         }
 
         [Fact]
-        public void CalculatePaycheck_NoDependents_ReturnsNoCost()
+        public async Task CalculatePaycheck_NoDependents_ReturnsNoCost()
         {
             // Arrange
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = 1,
@@ -141,7 +155,7 @@ namespace UnitTests.Services
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);
@@ -157,11 +171,10 @@ namespace UnitTests.Services
         /// Net                                      = 1,969.23
         /// </summary>
         [Fact]
-        public void CalculatePaycheck_NetPay_ReturnsCorrectCost()
+        public async Task CalculatePaycheck_NetPay_ReturnsCorrectCost()
         {
             // Arrange
             var expectedNetPay = 1969.23m;
-            var sut = new PaycheckService();
             var employee = new GetEmployeeDto()
             {
                 Salary = 80000m,
@@ -179,7 +192,7 @@ namespace UnitTests.Services
             };
 
             // Act
-            var paycheck = sut.CalculatePaycheck(employee);
+            var paycheck = await _sut.CalculatePaycheckAsync(employee);
 
             // Assert
             Assert.NotNull(paycheck);

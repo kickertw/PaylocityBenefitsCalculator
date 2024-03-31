@@ -18,6 +18,7 @@ namespace Api.Extensions
             // Repos
             services.AddTransient<IEmployeeRepository, EmployeeRepository>();
             services.AddTransient<IDependentRepository, DependentRepository>();
+            services.AddTransient<IAppConfigurationRepository, AppConfigurationRepository>();
         }
 
         public static void ConfigureDb(this IServiceCollection services)

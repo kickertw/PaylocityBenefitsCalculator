@@ -61,36 +61,51 @@ public class PaylocityDbContext : DbContext
                 Relationship = Relationship.Spouse,
                 DateOfBirth = new DateTime(1998, 3, 3)
             },
-                new()
-                {
-                    Id = 2,
-                    EmployeeId = 2,
-                    FirstName = "Child1",
-                    LastName = "Morant",
-                    Relationship = Relationship.Child,
-                    DateOfBirth = new DateTime(2020, 6, 23)
-                },
-                new()
-                {
-                    Id = 3,
-                    EmployeeId = 2,
-                    FirstName = "Child2",
-                    LastName = "Morant",
-                    Relationship = Relationship.Child,
-                    DateOfBirth = new DateTime(2021, 5, 18)
-                },
-                new()
-                {
-                    Id = 4,
-                    EmployeeId = 3,
-                    FirstName = "DP",
-                    LastName = "Jordan",
-                    Relationship = Relationship.DomesticPartner,
-                    DateOfBirth = new DateTime(1974, 1, 2)
-                }
+            new()
+            {
+                Id = 2,
+                EmployeeId = 2,
+                FirstName = "Child1",
+                LastName = "Morant",
+                Relationship = Relationship.Child,
+                DateOfBirth = new DateTime(2020, 6, 23)
+            },
+            new()
+            {
+                Id = 3,
+                EmployeeId = 2,
+                FirstName = "Child2",
+                LastName = "Morant",
+                Relationship = Relationship.Child,
+                DateOfBirth = new DateTime(2021, 5, 18)
+            },
+            new()
+            {
+                Id = 4,
+                EmployeeId = 3,
+                FirstName = "DP",
+                LastName = "Jordan",
+                Relationship = Relationship.DomesticPartner,
+                DateOfBirth = new DateTime(1974, 1, 2)
+            }
+        );
+
+        modelBuilder.Entity<AppConfiguration>().HasData(
+            new AppConfiguration()
+            {
+                Id = 1,
+                TotalPaychecksPerYear = 26,
+                BaseBenefitMonthlyCost = 1000m,
+                DependentBaseBenefitMonthlyCost = 600m,
+                DependentAdditionalBenefitCostAgeThreshold = 51,
+                DependentAdditionalBenefitMonthlyCost = 200m,
+                AnnualSalaryBenefitCostThreshold = 80000m,
+                AnnualSalaryCostRate = .02m
+            }
         );
     }
 
     public DbSet<Employee> Employees { get; set; }
     public DbSet<Dependent> Dependents { get; set; }
+    public DbSet<AppConfiguration> AppConfigs { get; set; }
 }

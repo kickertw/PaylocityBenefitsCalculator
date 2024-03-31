@@ -119,7 +119,7 @@ public class EmployeesController : ControllerBase
                 });
             }
 
-            var paycheck = _paycheckService.CalculatePaycheck(employee);
+            var paycheck = await _paycheckService.CalculatePaycheckAsync(employee);
             return Ok(new ApiResponse<EmployeePaycheckDto>
             {
                 Data = paycheck,

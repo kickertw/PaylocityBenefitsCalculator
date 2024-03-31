@@ -5,6 +5,6 @@ namespace Api.Services.Interfaces
 {
     public interface IPaycheckService
     {
-        EmployeePaycheckDto? CalculatePaycheck(GetEmployeeDto employee);
+        Task<EmployeePaycheckDto?> CalculatePaycheckAsync(GetEmployeeDto employee);
     }
 }
