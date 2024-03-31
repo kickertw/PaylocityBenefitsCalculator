@@ -99,6 +99,11 @@ public class EmployeesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Calculates an employee's salary per paycheck.
+    /// </summary>
+    /// <param name="id">The employee id</param>
+    /// <returns>EmployeePaycheckDto</returns>
     [SwaggerOperation(Summary = "Get paycheck information for an employee")]
     [HttpGet("{id}/paycheck")]
     [ProducesResponseType(StatusCodes.Status200OK)]
